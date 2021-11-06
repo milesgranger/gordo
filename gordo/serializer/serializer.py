@@ -5,8 +5,9 @@ import logging
 import os
 import re
 import pickle
+import copy
 
-from typing import Union, Any  # pragma: no flakes
+from typing import Union, Any, Optional  # pragma: no flakes
 
 from sklearn.pipeline import Pipeline
 from sklearn.base import TransformerMixin, BaseEstimator  # noqa
@@ -103,6 +104,9 @@ def load_metadata(source_dir: Union[os.PathLike, str]) -> dict:
         )
 
 
+CHECKSUM_KEY = "checksum"
+
+
 def load(source_dir: Union[os.PathLike, str]) -> Any:
     """
     Load an object from a directory, saved by
@@ -129,7 +133,12 @@ def load(source_dir: Union[os.PathLike, str]) -> Any:
         return pickle.load(f)
 
 
-def dump(obj: object, dest_dir: Union[os.PathLike, str], metadata: dict = None):
+def dump(
+    obj: object,
+    dest_dir: Union[os.PathLike, str],
+    metadata: dict = None,
+    info: Optional[dict] = None,
+):
     """
     Serialize an object into a directory, the object must be pickle-able.
 
@@ -143,6 +152,8 @@ def dump(obj: object, dest_dir: Union[os.PathLike, str], metadata: dict = None):
         from the corresponding "load" function
     metadata: Optional dict of metadata which will be serialized to a file together
         with the model, and loaded again by :func:`load_metadata`.
+    info: Optional[str]
+        Current revision info. For now, only used for storing "checksum"
 
     Returns
     -------
@@ -165,6 +176,9 @@ def dump(obj: object, dest_dir: Union[os.PathLike, str], metadata: dict = None):
     """
     with open(os.path.join(dest_dir, "model.pkl"), "wb") as m:
         pickle.dump(obj, m)
+    if info is not None:
+        with open(os.path.join(dest_dir, "info.json"), "w") as f:
+            simplejson.dump(info, f, default=str)
     if metadata is not None:
         with open(os.path.join(dest_dir, "metadata.json"), "w") as f:
             simplejson.dump(metadata, f, default=str)
