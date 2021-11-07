@@ -1,5 +1,5 @@
 # Gordo base image
-FROM python:3.7.11-buster as builder
+FROM python:3.7.12-buster as builder
 
 # Copy source code
 COPY . /code
